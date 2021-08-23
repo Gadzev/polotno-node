@@ -1,26 +1,35 @@
-const puppeteer = require('puppeteer');
-const path = require('path');
+const puppeteer = require("puppeteer");
+const path = require("path");
 
 module.exports.createInstance = async ({ key } = {}) => {
-  const browser = await puppeteer.launch({});
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: process.env.CHROME_BIN || null,
+    args: [
+      "--no-sandbox",
+      "--headless",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+    ],
+  });
   const page = await browser.newPage();
 
-  page.on('console', (msg) => {
+  page.on("console", (msg) => {
     msg.args().forEach((message) => {
       // skip style information
-      if (message.toString().indexOf('margin') >= 0) {
+      if (message.toString().indexOf("margin") >= 0) {
         return;
       }
       const text = message
         .toString()
-        .replace('JSHandle:', '')
-        .replace('%c', '');
+        .replace("JSHandle:", "")
+        .replace("%c", "");
       console.log(text);
     });
   });
 
   await page.goto(
-    `file:${path.join(__dirname, 'dist', 'client.html')}?key=${key}`
+    `file:${path.join(__dirname, "dist", "client.html")}?key=${key}`
   );
 
   const run = async (func, ...args) => {
@@ -42,7 +51,7 @@ module.exports.createInstance = async ({ key } = {}) => {
         store.loadJSON(json);
         await store.waitLoading();
         const url = store.toDataURL();
-        return url.split('base64,')[1];
+        return url.split("base64,")[1];
       }, json);
     },
     jsonToPDFBase64: async (json) => {
@@ -50,7 +59,7 @@ module.exports.createInstance = async ({ key } = {}) => {
         store.loadJSON(json);
         await store.waitLoading();
         const url = await store.toPDFDataURL();
-        return url.split('base64,')[1];
+        return url.split("base64,")[1];
       }, json);
     },
   };
